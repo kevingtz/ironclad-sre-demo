@@ -72,8 +72,16 @@ test-endpoint: ## Test the API endpoint
 	curl -s $$BACKEND_URL/health | jq '.' || echo "Backend not ready yet"
 
 demo: ## Run demo script
-	@echo "Running demo..."
-	@./demo.sh
+	@echo "Running comprehensive demo..."
+	@./scripts/demo.sh
+
+chaos-scenarios: ## Run chaos engineering scenarios
+	@echo "Starting chaos engineering scenarios..."
+	@./scripts/chaos-scenarios.sh
+
+test-suite: ## Run automated test suite
+	@echo "Running automated test suite..."
+	@./scripts/test-suite.sh
 
 chaos-enable: ## Enable chaos engineering
 	@BACKEND_URL=$$(minikube service backend -n $(NAMESPACE) --url | head -1) && \
