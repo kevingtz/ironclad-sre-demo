@@ -1,45 +1,45 @@
-# Documentación Técnica - Etapa 1C: Refinamiento y Optimización
+# Technical Documentation - Stage 1C: Refinement and Optimization
 
-## 📋 Índice
-1. [Resumen de Cambios](#resumen-de-cambios)
-2. [Chaos Engineering Avanzado](#chaos-engineering-avanzado)
-3. [Server Architecture Refinado](#server-architecture-refinado)
-4. [Docker Multi-Stage Optimizado](#docker-multi-stage-optimizado)
-5. [Makefile para Automatización](#makefile-para-automatización)
-6. [Análisis de Decisiones Técnicas](#análisis-de-decisiones-técnicas)
-7. [Patrones SRE Implementados](#patrones-sre-implementados)
-8. [Testing y Validación](#testing-y-validación)
+## 📋 Table of Contents
+1. [Summary of Changes](#summary-of-changes)
+2. [Advanced Chaos Engineering](#advanced-chaos-engineering)  
+3. [Refined Server Architecture](#refined-server-architecture)
+4. [Optimized Multi-Stage Docker](#optimized-multi-stage-docker)
+5. [Makefile for Automation](#makefile-for-automation)
+6. [Technical Decision Analysis](#technical-decision-analysis)
+7. [Implemented SRE Patterns](#implemented-sre-patterns)
+8. [Testing and Validation](#testing-and-validation)
 
 ---
 
-## 🎯 Resumen de Cambios
+## 🎯 Summary of Changes
 
-La Etapa 1C introdujo refinamientos críticos que transforman el demo de un prototipo funcional a una aplicación **production-ready** que demuestra excelencia en ingeniería SRE.
+Stage 1C introduced critical refinements that transform the demo from a functional prototype to a **production-ready** application that demonstrates excellence in SRE engineering.
 
-### Archivos Modificados/Creados:
-- **`backend/src/chaos.ts`** - Reescrito completamente
-- **`backend/src/server.ts`** - Refactorizado con mejores patrones
-- **`backend/Dockerfile`** - Optimizado para producción
-- **`Makefile`** - Nuevo sistema de automatización
+### Modified/Created Files:
+- **`backend/src/chaos.ts`** - Completely rewritten
+- **`backend/src/server.ts`** - Refactored with better patterns  
+- **`backend/Dockerfile`** - Optimized for production
+- **`Makefile`** - New automation system
 
-### Impacto en la Arquitectura:
+### Architecture Impact:
 ```
-Antes (Etapa 1):              Después (Etapa 1C):
+Before (Stage 1):             After (Stage 1C):  
 Basic Chaos → Chaos Config    Advanced Chaos → Granular Control
 Simple Server → API Server    Production Server → SLO Monitoring
-Basic Docker → Multi-Stage    Optimized Docker → Security + Performance
+Basic Docker → Multi-Stage    Optimized Docker → Security + Performance  
 Manual Process → Makefile     Automated Workflow → CI/CD Ready
 ```
 
 ---
 
-## 🎭 Chaos Engineering Avanzado
+## 🎭 Advanced Chaos Engineering
 
-### Análisis de la Implementación Anterior vs Nueva
+### Analysis of Previous vs New Implementation
 
-#### Versión Anterior (Etapa 1):
+#### Previous Version (Stage 1):
 ```typescript
-// Implementación básica con configuración estática
+// Basic implementation with static configuration
 export class ChaosEngineer {
   private config: ChaosConfig;
   
@@ -49,9 +49,9 @@ export class ChaosEngineer {
 }
 ```
 
-#### Nueva Implementación (Etapa 1C):
+#### New Implementation (Stage 1C):
 ```typescript
-// Implementación avanzada con control dinámico
+// Advanced implementation with dynamic control
 let chaosConfig = {
   latencyMs: 0,
   errorRate: 0,
@@ -63,16 +63,16 @@ export function chaosMiddleware(req, res, next) {
 }
 ```
 
-### ¿Por Qué Este Cambio?
+### Why This Change?
 
-#### 1. **Control Dinámico en Runtime**
+#### 1. **Dynamic Runtime Control**
 
-**Problema Anterior**: 
-- Chaos configuration era estática
-- Requería restart para cambios
-- Difícil testing de diferentes scenarios
+**Previous Problem**: 
+- Chaos configuration was static
+- Required restart for changes
+- Difficult testing of different scenarios
 
-**Solución Nueva**:
+**New Solution**:
 ```typescript
 router.post('/chaos/latency/:ms', (req, res) => {
   const ms = parseInt(req.params.ms);
@@ -86,15 +86,15 @@ router.post('/chaos/latency/:ms', (req, res) => {
 });
 ```
 
-**Beneficios**:
-- **Runtime Configuration**: Cambios sin downtime
-- **Gradual Testing**: Incrementar chaos progresivamente
-- **Quick Recovery**: Disable instantáneo en emergencias
-- **Validation**: Input sanitization para seguridad
+**Benefits**:
+- **Runtime Configuration**: Changes without downtime
+- **Gradual Testing**: Increase chaos progressively
+- **Quick Recovery**: Instant disable in emergencies
+- **Validation**: Input sanitization for security
 
-#### 2. **Timing Precision en Latency Injection**
+#### 2. **Timing Precision in Latency Injection**
 
-**Implementación Sofisticada**:
+**Sophisticated Implementation**:
 ```typescript
 function chaosMiddleware(req, res, next) {
   if (!chaosConfig.enabled) return next();
@@ -121,27 +121,27 @@ function chaosMiddleware(req, res, next) {
 }
 ```
 
-**¿Por Qué Esta Estructura?**
+**Why This Structure?**
 
-1. **Timing Realism**: Latencia ocurre antes que errores (simula network delays)
-2. **Non-Blocking**: setTimeout no bloquea el event loop
-3. **Closure Pattern**: `continueWithChaos()` mantiene contexto
-4. **Error Context**: Include chaos config en response para debugging
+1. **Timing Realism**: Latency occurs before errors (simulates network delays)
+2. **Non-Blocking**: setTimeout doesn't block the event loop
+3. **Closure Pattern**: `continueWithChaos()` maintains context
+4. **Error Context**: Include chaos config in response for debugging
 
-#### 3. **Endpoints Granulares de Control**
+#### 3. **Granular Control Endpoints**
 
 **Design Pattern - Single Responsibility**:
 ```typescript
-// Cada endpoint tiene UNA responsabilidad específica
-router.post('/chaos/enable', ...)    // Solo enable/disable
-router.post('/chaos/latency/:ms', ...)  // Solo latency configuration
-router.post('/chaos/errors/:rate', ...) // Solo error rate configuration
-router.get('/chaos/status', ...)     // Solo status reporting
+// Each endpoint has ONE specific responsibility
+router.post('/chaos/enable', ...)    // Only enable/disable
+router.post('/chaos/latency/:ms', ...)  // Only latency configuration
+router.post('/chaos/errors/:rate', ...) // Only error rate configuration
+router.get('/chaos/status', ...)     // Only status reporting
 ```
 
 **vs Monolithic Approach**:
 ```typescript
-// EVITAMOS esto - un endpoint que hace todo
+// AVOID this - one endpoint that does everything
 router.post('/chaos/config', (req, res) => {
   // Hard to test, hard to use, error-prone
   const { enabled, latencyMs, errorRate } = req.body;
@@ -149,23 +149,23 @@ router.post('/chaos/config', (req, res) => {
 });
 ```
 
-**Ventajas del Diseño Granular**:
-- **Testability**: Cada endpoint es unit-testable
+**Advantages of Granular Design**:
+- **Testability**: Each endpoint is unit-testable
 - **Usability**: Clear intent, easy to remember
-- **Safety**: Granular control reduce blast radius
+- **Safety**: Granular control reduces blast radius
 - **Monitoring**: Separate metrics per operation type
 
-### Chaos Engineering como SRE Practice
+### Chaos Engineering as SRE Practice
 
 #### Netflix Chaos Monkey Inspiration:
 ```bash
-# Enable latency testing (simula network issues)
+# Enable latency testing (simulates network issues)
 curl -X POST http://localhost:3000/api/chaos/latency/2000
 
-# Enable error injection (simula service failures)  
+# Enable error injection (simulates service failures)  
 curl -X POST http://localhost:3000/api/chaos/errors/0.1
 
-# Quick disable en emergencia
+# Quick disable in emergency
 curl -X POST http://localhost:3000/api/chaos/disable
 ```
 
@@ -177,19 +177,19 @@ logger.warn('Chaos: Injecting error', {
 });
 ```
 
-**¿Por Qué Logging es Crítico?**
-- **Post-mortem Analysis**: ¿Qué chaos causó qué behavior?
-- **Correlation**: Link chaos events con metrics spikes
-- **Compliance**: Audit trail de testing activities
+**Why Logging is Critical?**
+- **Post-mortem Analysis**: What chaos caused what behavior?
+- **Correlation**: Link chaos events with metrics spikes
+- **Compliance**: Audit trail of testing activities
 - **Learning**: Build institutional knowledge
 
 ---
 
-## 🏗️ Server Architecture Refinado
+## 🏗️ Refined Server Architecture
 
 ### Architectural Evolution
 
-#### Cambios Fundamentales en `server.ts`:
+#### Fundamental Changes in `server.ts`:
 
 1. **Response Format Standardization**
 2. **Enhanced Error Handling** 
@@ -198,7 +198,7 @@ logger.warn('Chaos: Injecting error', {
 
 ### 1. Response Format Standardization
 
-#### Antes:
+#### Before:
 ```typescript
 // Inconsistent response formats
 res.json({ users: result.rows, count: result.rows.length });
@@ -206,7 +206,7 @@ res.json(result.rows[0]);  // Different structure
 res.status(500).json({ error: 'Failed to create user' });
 ```
 
-#### Después:
+#### After:
 ```typescript
 // Consistent data/meta pattern
 res.status(201).json({
@@ -226,11 +226,11 @@ res.json({
 });
 ```
 
-#### ¿Por Qué Esta Estandarización?
+#### Why This Standardization?
 
 **1. Client Predictability**:
 ```typescript
-// Frontend puede siempre esperar:
+// Frontend can always expect:
 interface ApiResponse<T> {
   data: T;
   meta: {
@@ -243,7 +243,7 @@ interface ApiResponse<T> {
 
 **2. Request Tracing**:
 ```typescript
-// Cada response incluye requestId para correlation
+// Each response includes requestId for correlation
 meta: {
   requestId: req.id,  // Links logs, metrics, errors
   duration: Date.now() - startTime  // Performance tracking
@@ -262,10 +262,10 @@ meta: {
 }
 ```
 
-Client puede:
+Client can:
 - **Track Performance**: Duration per request
-- **Debug Issues**: requestId para log correlation  
-- **Monitor Data**: Count para pagination logic
+- **Debug Issues**: requestId for log correlation  
+- **Monitor Data**: Count for pagination logic
 
 ### 2. Enhanced Error Handling
 
@@ -279,15 +279,15 @@ if (error.code === '23505') { // Unique constraint violation
 }
 ```
 
-**¿Por Qué Mapear Error Codes?**
+**Why Map Error Codes?**
 
-PostgreSQL errors son crípticos:
+PostgreSQL errors are cryptic:
 ```
 ERROR: duplicate key value violates unique constraint "users_email_key"
 DETAIL: Key (email)=(john@example.com) already exists.
 ```
 
-Mapeamos a user-friendly:
+We map to user-friendly:
 ```json
 {
   "error": "Email already exists",
@@ -295,15 +295,15 @@ Mapeamos a user-friendly:
 }
 ```
 
-**Beneficios**:
-- **User Experience**: Mensajes claros
-- **Security**: No leak implementation details
-- **Debugging**: RequestId para internal tracking
+**Benefits**:
+- **User Experience**: Clear messages
+- **Security**: No leak of implementation details
+- **Debugging**: RequestId for internal tracking
 - **I18n Ready**: Easy to localize
 
 ### 3. SLO Monitoring Integration
 
-#### Nuevo Endpoint `/api/slo`:
+#### New Endpoint `/api/slo`:
 ```typescript
 app.get('/api/slo', async (req, res) => {
   res.json({
@@ -331,7 +331,7 @@ app.get('/api/slo', async (req, res) => {
 });
 ```
 
-#### ¿Por Qué SLO Endpoint?
+#### Why SLO Endpoint?
 
 **SRE Principle**: "SLOs should be visible to everyone"
 
@@ -371,7 +371,7 @@ app.get('/health', async (req, res) => {
 });
 ```
 
-#### ¿Por Qué Esta Estructura?
+#### Why This Structure?
 
 **Multi-Component Health**:
 - **Overall Status**: Single boolean for load balancer
@@ -404,7 +404,7 @@ curl http://localhost:3000/health | jq '.checks'
 
 ---
 
-## 🐳 Docker Multi-Stage Optimizado
+## 🐳 Optimized Multi-Stage Docker
 
 ### Architectural Improvements
 
@@ -432,7 +432,7 @@ COPY src ./src
 RUN npm run build
 ```
 
-#### ¿Por Qué Este Orden?
+#### Why This Order?
 
 **Docker Layer Caching Strategy**:
 1. **Base Image**: `node:18-alpine` (cached across projects)
@@ -471,8 +471,8 @@ COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 USER nodejs  # Process runs as nodejs user, not root
 ```
 
-**¿Por Qué?**
-- **Container Escape Protection**: Si container es comprometido, attacker no tiene root
+**Why?**
+- **Container Escape Protection**: If container is compromised, attacker doesn't have root
 - **File System Protection**: Limited write permissions
 - **Compliance**: Many security policies require non-root containers
 
@@ -482,7 +482,7 @@ ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "dist/server.js"]
 ```
 
-**¿Por Qué dumb-init?**
+**Why dumb-init?**
 
 **Problem**: Node.js (PID 1) doesn't handle signals properly in containers:
 ```bash
@@ -551,7 +551,7 @@ ironclad-backend:multi-stage     180MB
 
 ---
 
-## 🔧 Makefile para Automatización
+## 🔧 Makefile for Automation
 
 ### Evolution from Manual to Automated Workflow
 
@@ -602,7 +602,7 @@ check-tools: ## Check required tools
 	@echo "All required tools are installed ✓"
 ```
 
-**¿Por Qué Esta Validación?**
+**Why This Validation?**
 
 **Problem**: Cryptic errors later in process:
 ```bash
@@ -645,7 +645,7 @@ build-backend: ## Build backend Docker image
 	@echo "Backend image built ✓"
 ```
 
-**¿Por Qué `eval $(minikube docker-env)`?**
+**Why `eval $(minikube docker-env)`?**
 
 **Without it**:
 ```bash
@@ -690,9 +690,9 @@ DOCKER_REGISTRY=prod-registry.company.com NAMESPACE=production make build
 .PHONY: help build deploy clean test demo
 ```
 
-**¿Por Qué .PHONY?**
+**Why .PHONY?**
 
-**Problem**: Si existe archivo llamado "build":
+**Problem**: If file named "build" exists:
 ```bash
 $ touch build  # Create file named "build"
 $ make build   # Make thinks target is up-to-date, skips execution
@@ -705,15 +705,15 @@ $ make build   # Always executes, regardless of files
 
 ---
 
-## 📊 Análisis de Decisiones Técnicas
+## 📊 Technical Decision Analysis
 
-### Trade-offs y Justificaciones
+### Trade-offs and Justifications
 
 #### 1. **Chaos Engineering: Class vs Function Approach**
 
-**Decisión**: Cambiar de clase a funciones
+**Decision**: Change from class to functions
 
-**Anterior (Class-based)**:
+**Previous (Class-based)**:
 ```typescript
 export class ChaosEngineer {
   private config: ChaosConfig;
@@ -729,7 +729,7 @@ export class ChaosEngineer {
 export const chaosEngineer = new ChaosEngineer();
 ```
 
-**Nuevo (Function-based)**:
+**New (Function-based)**:
 ```typescript
 let chaosConfig = {
   latencyMs: 0,
@@ -741,21 +741,21 @@ export function chaosMiddleware(req, res, next) { /* ... */ }
 export const chaosRouter = router;
 ```
 
-**Justificación del Cambio**:
+**Justification for Change**:
 
-| Aspecto | Clase | Funciones | Ganador |
+| Aspect | Class | Functions | Winner |
 |---------|-------|-----------|---------|
-| **Simplicidad** | Más boilerplate | Código directo | Funciones ✅ |
-| **Testability** | Mock class instance | Mock module exports | Empate |
-| **Performance** | Object creation overhead | Direct function calls | Funciones ✅ |
-| **State Management** | Private state | Module-level state | Empate |
-| **Hot Reloading** | Instance persistence issues | Module reloading works | Funciones ✅ |
+| **Simplicity** | More boilerplate | Direct code | Functions ✅ |
+| **Testability** | Mock class instance | Mock module exports | Tie |
+| **Performance** | Object creation overhead | Direct function calls | Functions ✅ |
+| **State Management** | Private state | Module-level state | Tie |
+| **Hot Reloading** | Instance persistence issues | Module reloading works | Functions ✅ |
 
-**Conclusión**: Para chaos engineering, simplicidad > abstracción
+**Conclusion**: For chaos engineering, simplicity > abstraction
 
 #### 2. **Response Format: Flat vs Nested**
 
-**Decisión**: Structured data/meta pattern
+**Decision**: Structured data/meta pattern
 
 **Flat Format**:
 ```json
@@ -783,7 +783,7 @@ export const chaosRouter = router;
 }
 ```
 
-**Justificación**:
+**Justification**:
 
 **1. Clear Separation of Concerns**:
 - `data`: Business domain information
@@ -813,7 +813,7 @@ meta: {
 
 #### 3. **Docker Health Check: Inline vs Script**
 
-**Decisión**: Inline health check
+**Decision**: Inline health check
 
 **Script Approach**:
 ```dockerfile
@@ -829,7 +829,7 @@ HEALTHCHECK CMD node -e "require('http').get('http://localhost:3000/health', (re
 
 **Trade-off Analysis**:
 
-| Aspecto | Script | Inline | Decisión |
+| Aspect | Script | Inline | Decision |
 |---------|--------|--------|----------|
 | **Complexity** | Separate file | Single line | Inline ✅ |
 | **Flexibility** | More features | Basic check | Inline ✅ |
@@ -837,11 +837,11 @@ HEALTHCHECK CMD node -e "require('http').get('http://localhost:3000/health', (re
 | **Image Size** | +shell script | No extra files | Inline ✅ |
 | **Readability** | Very clear | Compact | Script |
 
-**Conclusión**: Para health check básico, simplicidad > flexibilidad
+**Conclusion**: For basic health check, simplicity > flexibility
 
 ---
 
-## 🔍 Patrones SRE Implementados
+## 🔍 Implemented SRE Patterns
 
 ### 1. **Observable Chaos Engineering**
 
@@ -1004,7 +1004,7 @@ curl /api/slo | jq '.slos[].current'
 
 ---
 
-## 🧪 Testing y Validación
+## 🧪 Testing and Validation
 
 ### Chaos Engineering Testing Scenarios
 
@@ -1155,20 +1155,20 @@ curl -s -X POST -H "Content-Type: application/json" -d '{}' http://localhost:300
 
 ---
 
-## 📈 Métricas de Mejora
+## 📈 Improvement Metrics
 
 ### Performance Impact
 
-#### Before vs After Etapa 1C:
+#### Before vs After Stage 1C:
 
-| Métrica | Antes | Después | Mejora |
+| Metric | Before | After | Improvement |
 |---------|-------|---------|--------|
-| **Docker Image Size** | 850MB | 180MB | 79% reducción |
-| **Build Time (code change)** | 5 min | 30 sec | 90% reducción |
-| **Response Consistency** | 3 formats | 1 format | 100% estandarización |
-| **Error Traceability** | 0% | 100% | Request ID en todos |
-| **Chaos Control** | Restart required | Runtime config | 100% flexibilidad |
-| **Tool Setup** | 15 commands | 3 commands | 80% reducción |
+| **Docker Image Size** | 850MB | 180MB | 79% reduction |
+| **Build Time (code change)** | 5 min | 30 sec | 90% reduction |
+| **Response Consistency** | 3 formats | 1 format | 100% standardization |
+| **Error Traceability** | 0% | 100% | Request ID in all |
+| **Chaos Control** | Restart required | Runtime config | 100% flexibility |
+| **Tool Setup** | 15 commands | 3 commands | 80% reduction |
 
 ### Operational Excellence Metrics
 
@@ -1207,13 +1207,13 @@ make build           # Single command builds everything
 
 ---
 
-## 🎯 Conclusiones
+## 🎯 Conclusions
 
-### Transformación Arquitectónica
+### Architectural Transformation
 
-La Etapa 1C transformó el proyecto de un **prototipo funcional** a una **aplicación production-ready** que demuestra:
+Stage 1C transformed the project from a **functional prototype** to a **production-ready** application that demonstrates:
 
-1. **SRE Excellence**: Observability, reliability patterns, y error budgets
+1. **SRE Excellence**: Observability, reliability patterns, and error budgets
 2. **Operational Maturity**: Automated tooling, standardized processes
 3. **Production Readiness**: Security, performance, maintainability
 4. **Developer Experience**: Clear workflows, comprehensive documentation
@@ -1240,17 +1240,17 @@ La Etapa 1C transformó el proyecto de un **prototipo funcional** a una **aplica
 - **Error Reduction**: Automated validation prevents mistakes
 - **Knowledge Sharing**: Self-documenting Makefile
 
-### Next Steps (Etapa 2)
+### Next Steps (Stage 2)
 
-Con esta base sólida, la Etapa 2 puede enfocarse en:
+With this solid foundation, Stage 2 can focus on:
 
 1. **Kubernetes Manifests**: Deploy production-ready configurations
 2. **Monitoring Stack**: Prometheus + Grafana dashboards
 3. **CI/CD Integration**: Automated testing and deployment
 4. **Frontend Development**: Complete full-stack experience
 
-La arquitectura actual está **preparada para escala** y demuestra los principios SRE que Ironclad valora para su infraestructura crítica de contratos.
+The current architecture is **ready for scale** and demonstrates the SRE principles that Ironclad values for their critical contract infrastructure.
 
 ---
 
-*Esta documentación representa la evolución de un demo técnico a una implementación de producción que equilibra simplicidad con robustez, demostrando excelencia en ingeniería SRE.*
+*This documentation represents the evolution of a technical demo to a production implementation that balances simplicity with robustness, demonstrating excellence in SRE engineering.*

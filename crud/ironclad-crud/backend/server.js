@@ -15,23 +15,31 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'postgres'
 });
 
-// Initialize database
-async function initDB() {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        first_name VARCHAR(100) NOT NULL CHECK (first_name ~ '^[A-Za-z\\s-]+$'),
-        middle_name VARCHAR(100),
-        last_name VARCHAR(100) NOT NULL CHECK (last_name ~ '^[A-Za-z\\s-]+$'),
-        email VARCHAR(255) UNIQUE NOT NULL,
-        phone_number VARCHAR(20) NOT NULL,
-        date_of_birth DATE NOT NULL
-      )
-    `);
-    console.log('Database initialized');
-  } catch (err) {
-    console.error('Database init error:', err);
+// Initialize database with retry logic
+async function initDB(retries = 5) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          first_name VARCHAR(100) NOT NULL CHECK (first_name ~ '^[A-Za-z\\s-]+$'),
+          middle_name VARCHAR(100),
+          last_name VARCHAR(100) NOT NULL CHECK (last_name ~ '^[A-Za-z\\s-]+$'),
+          email VARCHAR(255) UNIQUE NOT NULL,
+          phone_number VARCHAR(20) NOT NULL,
+          date_of_birth DATE NOT NULL
+        )
+      `);
+      console.log('Database initialized successfully');
+      return;
+    } catch (err) {
+      console.log(`Database connection attempt ${i + 1}/${retries} failed:`, err.message);
+      if (i === retries - 1) {
+        console.error('Failed to initialize database after', retries, 'attempts');
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
   }
 }
 
