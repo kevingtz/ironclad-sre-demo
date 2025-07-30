@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ironclad CRUD Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-container, .data-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input {
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-create {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-update {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-return {
+            background-color: #ff9800;
+            color: white;
+        }
+        #userList {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .user-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        .user-item:hover {
+            background-color: #e3f2fd;
+        }
+        .selected {
+            background-color: #bbdefb !important;
+            border-color: #2196F3;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ironclad CRUD Demo</h1>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>User Form</h2>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                
+                <label>First Name:</label>
+                <input type="text" id="firstName" required pattern="[A-Za-z\s-]+" title="Only letters, spaces, and hyphens allowed">
+                
+                <label>Middle Name:</label>
+                <input type="text" id="middleName" pattern="[A-Za-z\s-]*" title="Only letters, spaces, and hyphens allowed">
+                
+                <label>Last Name:</label>
+                <input type="text" id="lastName" required pattern="[A-Za-z\s-]+" title="Only letters, spaces, and hyphens allowed">
+                
+                <label>Email:</label>
+                <input type="email" id="email" required>
+                
+                <label>Phone No:</label>
+                <input type="tel" id="phoneNumber" required placeholder="(555) 123-4567">
+                
+                <label>Date of Birth:</label>
+                <input type="text" id="dateOfBirth" required placeholder="MM/DD/YYYY" pattern="\d{2}/\d{2}/\d{4}">
+                
+                <div class="button-group">
+                    <button type="button" class="btn-create" onclick="createUser()">Create</button>
+                    <button type="button" class="btn-update" onclick="updateUser()">Update</button>
+                    <button type="button" class="btn-delete" onclick="deleteUser()">Delete</button>
+                    <button type="button" class="btn-return" onclick="loadUsers()">Return All Data</button>
+                </div>
+                
+                <div id="message"></div>
+            </form>
+        </div>
+        
+        <div class="data-container">
+            <h2>Return all data here and use same data to update or delete the contents from your persistent store.</h2>
+            <div id="userList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/users';
+        let selectedUserId = null;
+
+        // Load users on page load
+        window.onload = loadUsers;
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(API_URL);
+                const users = await response.json();
+                
+                const userList = document.getElementById('userList');
+                userList.innerHTML = users.map(user => `
+                    <div class="user-item" onclick="selectUser(${JSON.stringify(user).replace(/"/g, '&quot;')})">
+                        <strong>${user.first_name} ${user.middle_name || ''} ${user.last_name}</strong><br>
+                        Email: ${user.email}<br>
+                        Phone: ${user.phone_number}<br>
+                        DOB: ${user.date_of_birth}
+                    </div>
+                `).join('');
+                
+                showMessage('Data loaded successfully', 'success');
+            } catch (error) {
+                showMessage('Error loading users: ' + error.message, 'error');
+            }
+        }
+
+        function selectUser(user) {
+            selectedUserId = user.id;
+            document.getElementById('userId').value = user.id;
+            document.getElementById('firstName').value = user.first_name;
+            document.getElementById('middleName').value = user.middle_name || '';
+            document.getElementById('lastName').value = user.last_name;
+            document.getElementById('email').value = user.email;
+            document.getElementById('phoneNumber').value = user.phone_number;
+            document.getElementById('dateOfBirth').value = user.date_of_birth;
+            
+            // Update selected styling
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+        }
+
+        async function createUser() {
+            const userData = getFormData();
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+                
+                showMessage('User created successfully', 'success');
+                clearForm();
+                loadUsers();
+            } catch (error) {
+                showMessage('Error creating user: ' + error.message, 'error');
+            }
+        }
+
+        async function updateUser() {
+            if (!selectedUserId) {
+                showMessage('Please select a user to update', 'error');
+                return;
+            }
+            
+            const userData = getFormData();
+            
+            try {
+                const response = await fetch(`${API_URL}/${selectedUserId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+                
+                showMessage('User updated successfully', 'success');
+                clearForm();
+                loadUsers();
+            } catch (error) {
+                showMessage('Error updating user: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteUser() {
+            if (!selectedUserId) {
+                showMessage('Please select a user to delete', 'error');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to delete this user?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/${selectedUserId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok && response.status !== 204) {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+                
+                showMessage('User deleted successfully', 'success');
+                clearForm();
+                loadUsers();
+            } catch (error) {
+                showMessage('Error deleting user: ' + error.message, 'error');
+            }
+        }
+
+        function getFormData() {
+            return {
+                first_name: document.getElementById('firstName').value,
+                middle_name: document.getElementById('middleName').value,
+                last_name: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone_number: document.getElementById('phoneNumber').value,
+                date_of_birth: document.getElementById('dateOfBirth').value
+            };
+        }
+
+        function clearForm() {
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            selectedUserId = null;
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            setTimeout(() => {
+                messageDiv.textContent = '';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

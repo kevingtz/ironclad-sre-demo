@@ -9,3 +9,4 @@ dist/
 .idea/
 coverage/
 .nyc_output/
+Docker.dmg

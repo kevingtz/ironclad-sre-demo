@@ -13,7 +13,7 @@ echo "✅ All tools present"
 
 # Start minikube
 echo "🔧 Starting Minikube..."
-minikube start --cpus=4 --memory=8192 --driver=docker
+minikube start --cpus=2 --memory=6144 --driver=docker
 minikube addons enable metrics-server
 
 # Build images
